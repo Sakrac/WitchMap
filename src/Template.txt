@@ -1,0 +1,142 @@
+Name = WitchBlocks
+Image = WitchBlocks.png
+Templates [
+	BrittleWall {
+		Type = chars
+		ID = 1
+		Frames [
+			Frame {
+				x = 0
+				y = 0
+				w = 16
+				h = 64
+			}
+		]
+	}
+	Pumpkin {
+		Type = chars
+		ID = 2
+		Frames [
+			Frame {
+				x = 16
+				y = 0
+				w = 24
+				h = 16
+			}
+		]
+	}
+	Candle {
+		Type = chars
+		ID = 3
+		Frames [
+			Frame {
+				x = 40
+				y = 0
+				w = 24
+				h = 16
+			}
+			Frame {
+				x = 40
+				y = 16
+				w = 24
+				h = 16
+			}
+		]
+		Anim [
+			Key {
+				frame = 0
+				time = 7
+			}
+			Key {
+				frame = 1
+				time = 7
+			}
+		]
+	}
+	Gas {
+		Type = chars
+		ID = 4
+		Frames [
+			Frame {
+				x = 64
+				y = 0
+				w = 32
+				h = 8
+			}
+			Frame {
+				x = 64
+				y = 8
+				w = 32
+				h = 8
+			}
+			Frame {
+				x = 64
+				y = 16
+				w = 24
+				h = 8
+			}
+			Frame {
+				x = 64
+				y = 24
+				w = 16
+				h = 8
+			}
+			Frame {
+				x = 64
+				y =32
+				w = 8
+				h = 8
+			}
+		]
+		Anim [
+			key {
+				frame = 4
+				time = 8
+			}
+			key {
+				frame = 3
+				time = 4
+			}
+			key {
+				frame = 2
+				time = 4
+			}
+			key {
+				frame =1
+				time = 4
+			}
+			key {
+				frame = 0
+				time = 2
+			}
+			key {
+				frame = 1
+				time = 2
+			}
+			key {
+				frame = 0
+				time = 2
+			}
+			key {
+				frame = 1
+				time = 2
+			}
+			key {
+				frame = 0
+				time = 2
+			}
+			key {
+				frame = 1
+				time = 2
+			}
+			key {
+				frame = 0
+				time = 2
+			}
+			key {
+				frame =1
+				time = 4
+			}
+		]
+	}
+]
