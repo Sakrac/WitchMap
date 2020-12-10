@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "imgui.h"
-#include "image.h"
+#include "Image.h"
 #include "FileDialog.h"
 #include "struse/struse.h"
 #include "Config.h"
@@ -114,7 +114,7 @@ void SaveLevel(Level *level)
 				if ((size_t)item->set < image->templateSets.size()) {
 					TemplateSet* set = image->templateSets[item->set];
 					if ((size_t)item->frame < set->frames.size()) {
-						TemplateFrame* frame = &set->frames[item->frame];
+						//TemplateFrame* frame = &set->frames[item->frame];
 						conf.BeginStruct(set->name);
 						conf.AddValue("image", item->image);
 						conf.AddValue("set", item->set);
@@ -240,6 +240,10 @@ TemplateFrame* GetTemplateFrameFromItem(TemplateItem& item, Level *level)
 	return nullptr;
 }
 
+#ifndef _MSC_VER
+#define sprintf_s sprintf
+#endif 
+
 void ShowLevelMap(Level *level)
 {
 	static float mapScale = 1.0f;
@@ -270,7 +274,7 @@ void ShowLevelMap(Level *level)
 
 	ImGui::NextColumn();
 
-	static int e = 0;
+	//static int e = 0;
 	ImGui::RadioButton("background", &level->currentLayer, 0);
 	ImGui::SameLine();
 	ImGui::Checkbox("show##bg", &level->showBackground);
@@ -304,7 +308,7 @@ void ShowLevelMap(Level *level)
 
 	// pixels left in window
 	ImVec2 winLeft(winSize.x + winPos.x, winSize.y + winPos.y);
-	float mapWindowArea[2] = { winLeft.x - spl.x, winLeft.y - spl.y };
+	//float mapWindowArea[2] = { winLeft.x - spl.x, winLeft.y - spl.y };
 
 	ImVec2 mousePos = ImGui::GetMousePos();
 

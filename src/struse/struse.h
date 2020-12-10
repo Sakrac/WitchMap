@@ -96,9 +96,9 @@ public:
 
 	bool is_substr(const char *sub) const { return sub>=string && sub<=(string+length); }
 	strl_t substr_offs(strref substr) const {
-		if (is_substr(substr.get())) return strl_t(substr.get()-get()); return 0; }
+		if (is_substr(substr.get())) { return strl_t(substr.get()-get()); } return 0; }
 	strl_t substr_end_offs(strref substr) const {
-		if (is_substr(substr.get())) return strl_t(substr.get()-get()) + substr.get_len(); return 0; }
+		if (is_substr(substr.get())) { return strl_t(substr.get()-get()) + substr.get_len(); } return 0; }
 	bool is_empty() const { return length==0; }
 
 	// get fnv1a hash for string
@@ -494,7 +494,7 @@ public:
 	strref get_substr(int pos, strl_t len) const { return get_substr((strl_t)pos, len); }
 
 	strref get_skipped(strl_t len) const { if (len<length)
-		return strref(string+len, length-len); return strref(); }
+		{ return strref(string+len, length-len); } return strref(); }
 
 	// get this strref without leading whitespace
 	strref get_skip_ws() const { return get_skipped(len_whitespace()); }
@@ -514,7 +514,7 @@ public:
 	strref get_valid_json_string() const {
 		const uint8_t *s = get_u(); strl_t l = length; while (l) {
 		uint8_t c = *s++; if (!(c=='+' || c=='.' || c=='-' || is_number(c) || c>='A'))
-		break; l--;	} return strref(string, length-l); }
+		{ break; } l--; } return strref(string, length-l); }
 
 	strref before(char c) const {
 		int o = find(c); if (o>=0) return strref(string, o); return strref(); }
@@ -538,39 +538,39 @@ public:
 		int o = find(str); if (o<0) return *this; return strref(string+o, length-o); }
 
 	strref after_or_full(char c) const { int o = find(c);
-		if (o>=0) return strref(string+o+1, length-o-1); return *this; }
+		if (o>=0) { return strref(string+o+1, length-o-1); } return *this; }
 
 	strref after_or_full(char c, char d) const { int o = find(c, d);
-		if (o>=0) return strref(string+o+1, length-o-1); return *this; }
+		if (o>=0) { return strref(string+o+1, length-o-1); } return *this; }
 
 	strref after(char c) const { int o = find(c);
-		if (o>=0) return strref(string+o+1, length-o-1); return strref(); }
+		if (o>=0) { return strref(string+o+1, length-o-1); } return strref(); }
 
 	strref after_last_or_full(char c) const { int o = find_last(c);
-		if (o>=0) return strref(string+o+1, length-o-1); return *this; }
+		if (o>=0) { return strref(string+o+1, length-o-1); } return *this; }
 
 	strref after_last_or_full(char c, char d) const {
-		int o = find_last(c, d); if (o>=0) return strref(string+o+1, length-o-1); return *this; }
+		int o = find_last(c, d); if (o>=0) { return strref(string+o+1, length-o-1); } return *this; }
 
 	strref after_last(char c) const { int o = find_last(c); if (o>=0)
-			return strref(string+o+1, length-o-1); return strref(); }
+			{ return strref(string+o+1, length-o-1); } return strref(); }
 
 	strref after_last(char c, char d) const { int o = find_last(c, d); if (o>=0)
-		return strref(string+o+1, length-o-1); return strref(); }
+		{ return strref(string+o+1, length-o-1); } return strref(); }
 
 	strref get_alphanumeric() const { strref r(*this); r.skip_whitespace();
-		if (strl_t l = r.len_alphanumeric()) return strref(string, l); return strref(); }
+		if (strl_t l = r.len_alphanumeric()) { return strref(string, l); } return strref(); }
 	
 	strref get_label() const { return strref(string, len_label()); }
 	
 	strref before_or_full_case(const strref str) const { int o = find_case(str);
-		if (o<0) return *this; return strref(string, o); }
+		if (o<0) { return *this; } return strref(string, o); }
 
 	strref after_or_full_case(const strref str) const { int o = find_case(str);
-		if (o<0) return *this; return strref(string+o, length-o); }
+		if (o<0) { return *this; } return strref(string+o, length-o); }
 
     strref between(char c, char d) { int s = find(c); if (s>=0) { int e = find_after(d, (strl_t)s);
-        if (e>=0) return get_substr(strl_t(s+1), strl_t(e-s-1)); } return strref(); }
+        if (e>=0) { return get_substr(strl_t(s+1), strl_t(e-s-1)); } } return strref(); }
 
 	// tokenization
 	strref split(strl_t pos);
@@ -619,9 +619,9 @@ public:
 	int find_quoted(char d) const; // returns length up to the delimiter d with c/c++ quotation rules, or -1 if delimiter not found
 
 	strref next_chunk_xml(char open, char close) const { int s = find_quoted_xml(open);
-		if (s<0) return strref(); strref left = get_skipped(strl_t(s+1)); return left.get_clipped(strl_t(left.find_quoted_xml(close))); }
+		if (s<0) { return strref(); } strref left = get_skipped(strl_t(s+1)); return left.get_clipped(strl_t(left.find_quoted_xml(close))); }
 	strref next_chunk_quoted(char open, char close) const { int s = find_quoted(open);
-		if (s<0) return strref(); strref left = get_skipped(strl_t(s+1)); return left.get_clipped(strl_t(left.find_quoted(close))); }
+		if (s<0) { return strref(); } strref left = get_skipped(strl_t(s+1)); return left.get_clipped(strl_t(left.find_quoted(close))); }
 	void skip_chunk(const strref chunk) { strl_t add = strl_t(chunk.string-string)+chunk.length+1UL;
 		if (add<length) { string += add; length -= add; } else { clear(); } }
 };
@@ -685,10 +685,10 @@ public:
 	void add_len(strl_t l) { add_len_int(fit_add(l)); }
 
 	// offset operators will always return a strref
-	strref operator+(const strl_t skip) { if (skip<len())
-		return strref(charstr()+skip, len()-skip); return strref(); }
-	strref operator+(const int skip) { if (skip>=0 && strl_t(skip)<len())
-		return strref(charstr()+skip, len()-skip); return strref(); }
+	strref operator+(const strl_t skip) { if (skip<len()) {
+		return strref(charstr()+skip, len()-skip); } return strref(); }
+	strref operator+(const int skip) { if (skip>=0 && strl_t(skip)<len()) {
+		return strref(charstr()+skip, len()-skip); } return strref(); }
 
 	// get character at position
 	char operator[](size_t pos) { return pos<len() ? charstr()[pos] : 0; }
@@ -750,7 +750,7 @@ public:
 	int find_after_last(char a, char b) const { return get_strref().find_after_last(a, b); }
 	int find_after_last(char a1, char a2, char b) const { return get_strref().find_after_last(a1, a2, b); }
 	int find(const strref str) const { return get_strref().find(str); }
-	int find(const strref str, strl_t pos) const { get_strref().find(str, pos); }
+	int find(const strref str, strl_t pos) const { return get_strref().find(str, pos); }
 	int find(const char *str, strl_t pos = 0) const { return get_strref().find(str, pos); }
 	int find_case(const strref str) const { return get_strref().find_case(str); }
 	int find_case(const char *str) const { return get_strref().find_case(str); }
@@ -954,8 +954,8 @@ public:
 		set_len(_strmod_inplace_replace_int(charstr(), len(), cap(), a, b)); return get_strref(); }
 
 	// replace strings bookended by a specific string
-	strref replace_bookend(const strref a, const strref b, const strref bookend) { if (len() && get() && a && bookend)
-		set_len(_strmod_inplace_replace_bookend_int(charstr(), len(), cap(), a, b, bookend)); return get_strref(); }
+	strref replace_bookend(const strref a, const strref b, const strref bookend) { if (len() && get() && a && bookend) {
+		set_len(_strmod_inplace_replace_bookend_int(charstr(), len(), cap(), a, b, bookend)); } return get_strref(); }
 
 	// replace a string found within this string with another string
     void exchange(strl_t pos, strl_t size, const strref insert) {
@@ -978,8 +978,8 @@ public:
 	char* charend() { return charstr()+len(); }
 
 	// remove a portion of this string
-	void erase(strl_t pos, strl_t length) { if (pos<len()) { if ((pos+length)>len())
-		length = len()-pos; if (length) { for (strl_t i = 0; i<length; i++)
+	void erase(strl_t pos, strl_t length) { if (pos<len()) { if ((pos+length)>len()) {
+		length = len()-pos; } if (length) { for (strl_t i = 0; i<length; i++)
 		charstr()[pos+i] = charstr()[pos+i+length];	} sub_len_int(length); } }
 
 	strmod& cleanup_path() { 
