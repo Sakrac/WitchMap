@@ -5,7 +5,12 @@
 bool SaveFile(const char *filename, void* data, size_t size)
 {
 	FILE* f;
+#ifdef WIN32
 	if (fopen_s(&f, filename, "w") == 0 && f != nullptr) {
+#else
+	f = fopen(filename, "w");
+	if (f) {
+#endif
 		fwrite(data, size, 1, f);
 		fclose(f);
 		return true;
@@ -16,7 +21,12 @@ bool SaveFile(const char *filename, void* data, size_t size)
 uint8_t* LoadBinary(const char* name, size_t& size)
 {
 	FILE* f;
-	if (fopen_s(&f, name, "rb") == 0 && f) {
+#ifdef WIN32
+	if (fopen_s(&f, name, "rb") == 0 && f != nullptr) {
+#else
+	f = fopen(name, "rb");
+	if (f) {
+#endif
 		fseek(f, 0, SEEK_END);
 		size_t sizeAdd = ftell(f);
 		fseek(f, 0, SEEK_SET);

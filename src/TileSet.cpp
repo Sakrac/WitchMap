@@ -1,7 +1,7 @@
 #include <vector>
 #include <stdio.h>
 #include "imgui.h"
-#include "image.h"
+#include "Image.h"
 #include "FileDialog.h"
 #include "struse/struse.h"
 #include "Config.h"

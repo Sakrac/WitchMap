@@ -14,12 +14,12 @@
 CXX = g++
 #CXX = clang++
 
-EXE = WitchMap.exe
-SOURCES = src/WitchMap.cpp src/Config.cpp src/Editor.cpp src/Files.cpp
-SOURCES += src/Image.cpp src/LoadLevel.cpp src/Template.cpp src/TileSet.cpp
-SOURCES += src/imgui/examples/imgui_impl_glfw.cpp src/imgui/exanples/imgui_impl_opengl2.cpp
-SOURCES += src/imgui/imgui.cpp src/imgui/imgui_demo.cpp src/imgui/imgui_draw.cpp src/imgui/imgui_widgets.cpp
-SOURCES += src/FileDialog.cpp
+EXE = ../WitchMap.exe
+SOURCES = WitchMap.cpp Config.cpp Editor.cpp Files.cpp
+SOURCES += Image.cpp LoadLevel.cpp Template.cpp TileSet.cpp
+SOURCES += imgui/examples/imgui_impl_glfw.cpp imgui/examples/imgui_impl_opengl2.cpp
+SOURCES += imgui/imgui.cpp imgui/imgui_demo.cpp imgui/imgui_draw.cpp imgui/imgui_widgets.cpp
+SOURCES += FileDialog.cpp
 OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 UNAME_S := $(shell uname -s)
 
@@ -65,10 +65,10 @@ endif
 %.o:%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-%.o:../%.cpp
+%.o:imgui/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-%.o:../../%.cpp
+%.o:imgui/examples/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 all: $(EXE)

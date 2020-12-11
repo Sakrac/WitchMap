@@ -1,7 +1,7 @@
 #include <vector>
 #include <stdio.h>
 #include "imgui.h"
-#include "image.h"
+#include "Image.h"
 #include "FileDialog.h"
 #include "struse/struse.h"
 #include "Config.h"
@@ -66,7 +66,7 @@ void ShowTemplateImages(Level *level, std::vector<ImTextureID> &aTextureIDs)
 					TemplateSet* set = tmp->templateSets[ts];
 					for (size_t f = 0, nf = set->frames.size(); f < nf; ++f) {
 						TemplateFrame* frame = &set->frames[f];
-						bool selected = i == level->currTemplateImage && ts == level->currTemplate && f == level->currTemplateFrame;
+						bool selected = i == (size_t)level->currTemplateImage && ts == (size_t)level->currTemplate && f == (size_t)level->currTemplateFrame;
 						ImColor frameCol = selected ? ImColor(255, 255, 0, 255) : ImColor(255, 255, 255, 160);
 						ImVec2 tl(sp.x + s * (frame->x - tmp->imgPos[0]), sp.y + s * (frame->y - tmp->imgPos[1]));
 						ImVec2 br(tl.x + s * frame->w, tl.y + s * frame->h);
