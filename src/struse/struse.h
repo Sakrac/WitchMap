@@ -917,6 +917,11 @@ public:
 
 	strmod& append_num(uint32_t num, strl_t size, strl_t radix) {
 		strl_t div = 1;
+		if(!size) {
+			strl_t mul = 9;
+			size = 1;
+			while( num > mul ) { size++; mul = (mul+1)*10-1; }
+		}
 		for(strl_t n=1; n<size; ++n) { div *= radix; }
 		for(strl_t a=0; a<size; ++a) {
 			char v = (num / div) % radix + '0';
@@ -5022,6 +5027,14 @@ strl_t _strmod_utf8_toupper(char *string, strl_t length, strl_t cap) {
 	return (strl_t)(end-string);
 }
 
+#ifdef _WIN32
+#define DIR_SEP '\\'
+#define NOT_DIR_SEP '/'
+#else
+#define NOT_DIR_SEP '\\'
+#define DIR_SEP '/'
+#endif
+
 strl_t _strmod_cleanup_path(char *file, strl_t len)
 {
 	strl_t pos = 0;
@@ -5029,15 +5042,13 @@ strl_t _strmod_cleanup_path(char *file, strl_t len)
 	while (len) {
 		len--;
 		char c = *file++;
-		if (c=='/')
-			c='\\';
+		if (c==NOT_DIR_SEP) { c=DIR_SEP; }
 		trg[pos] = c;
-		if ((c=='/' || c=='\\') && len>=3 && *file=='.' && file[1]=='.' && (file[2] =='/' || file[2]=='\\') && pos) {
+		if ((c==NOT_DIR_SEP || c==DIR_SEP) && len>=3 && *file=='.' && file[1]=='.' && (file[2] =='/' || file[2]=='\\') && pos) {
 			// attempt to rewind
 			strl_t rew = pos-1;
 			while (rew) {
-				if (trg[rew-1] == '/' || trg[rew-1]=='\\')
-					break;
+				if (trg[rew-1] == NOT_DIR_SEP || trg[rew-1]==DIR_SEP) { break; }
 				--rew;
 			}
 			pos = rew;

@@ -26,6 +26,8 @@
 #define GL_SILENCE_DEPRECATION
 #endif
 #include <GLFW/glfw3.h>
+#include "FileDialog.h"
+#include "FilesView.h"
 
 void WitchEdInit();
 void WitchEdWindow();
@@ -67,6 +69,8 @@ int main(int argc, char* argv[])
         return 1;
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync
+
+    InitStartFolder();
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -149,6 +153,7 @@ int main(int argc, char* argv[])
         ImGui::DockSpace(dockspace_id);
 
         WitchEdWindow();
+        DrawFileDialog();
 
         ImGui::End();
 

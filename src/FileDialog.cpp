@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include "Config.h"
 #include "FileDialog.h"
+#include "FilesView.h"
 #ifdef __linux__
 #include <unistd.h>
 #include <linux/limits.h>
@@ -48,7 +49,7 @@ static char sSaveLevelFile[PATH_MAX_LEN] = {};
 static char sLoadLevelFile[PATH_MAX_LEN] = {};
 static char sLoadTemplateFile[PATH_MAX_LEN] = {};
 
-
+static FVFileView filesView;
 static char sCurrentDir[ PATH_MAX_LEN ] = {};
 
 struct FileTypeInfo {
@@ -65,13 +66,15 @@ static FileTypeInfo aLoadLevelInfo = { "Level\0*.txt\0", sLoadLevelFile, &sLoadL
 static FileTypeInfo aLoadGrabInfo = { "GrabMap\0*.png\0*.bmp\0*.tga\0", sLoadGrabFile, &sLoadGrabMapReady };
 static FileTypeInfo aLoadTemplateInfo = { "Template\0*.txt\0", sLoadTemplateFile, &sLoadTemplateImageReady };
 
-void GetStartFolder()
+void InitStartFolder()
 {
 	if( GetCurrentDirectory( sizeof( sCurrentDir ), sCurrentDir ) != 0 ) {
 		return;
 	}
 	sCurrentDir[ 0 ] = 0;
 }
+
+const char* GetStartFolder() { return sCurrentDir; }
 
 void ResetStartFolder()
 {
@@ -89,6 +92,11 @@ const char* ImportImageReady()
 		return sImportImageFile;
 	}
 	return nullptr;
+}
+
+void DrawFileDialog()
+{
+	filesView.Draw("Select File");
 }
 
 const char* LoadGrabMapReady()
@@ -266,5 +274,9 @@ void LoadLevelDialog()
 #ifdef _WIN32
 	hThreadFileDialog = CreateThread(NULL, FILE_LOAD_THREAD_STACK, (LPTHREAD_START_ROUTINE)FileLoadDialogThreadRun, &aLoadLevelInfo,
 		0, NULL);
+#else
+	if( !filesView.IsOpen()) {
+		filesView.Show(GetStartFolder());
+	}
 #endif
 }
