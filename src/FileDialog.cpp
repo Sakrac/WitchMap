@@ -1,4 +1,4 @@
-#ifdef WIN32
+#ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <commdlg.h>
@@ -6,7 +6,9 @@
 #include <stdio.h>
 #include "Config.h"
 #include "FileDialog.h"
-
+#ifndef _WIN32
+#include "LimeOats/L2DFileDialog.h"
+#endif
 /* L2D File Dialog for ImGui Instructions
 Usage
 Add L2DFileDialog.h to your C++ project and include it where you use ImGui.
