@@ -11,12 +11,12 @@
 #elif _WIN32
 #endif
 
-void FVFileView::Show(const char *folder)
+void FVFileView::Show(const char *folder, const char *filter)
 {
 	strovl usr(userPath, sizeof(userPath));
 	usr.copy(folder);
 	usr.c_str();
-	ReadDir(folder); 
+	ReadDir(folder, filter); 
 	open = true; 
 	selectedFile[0] = 0;
 }
@@ -30,6 +30,18 @@ void FVFileView::Draw(const char *title)
 		}
 		if(ImGui::InputText("File", userFile, sizeof(userFile), ImGuiInputTextFlags_EnterReturnsTrue)) {
 			printf("%s\n",userFile);
+		}
+		if( filter ) {
+			strown<256> filterStr("File Types: ");
+			strref filters(filter);
+			bool first = true;
+			while(strref filt = filters.split_token(',')) {
+				strref filtType = filt.split_token(':');
+				if( first ) { first = false; }
+				else { filterStr.append(", "); }
+				filterStr.append(filtType).append(" (").append(filt).append(")");
+			}
+			ImGui::Text(filterStr.c_str());
 		}
 		ImGui::BeginChild("Directory", ImVec2(0, 0), true);
 		for (size_t i=0, n=files.size(); i<n; ++i) {
@@ -52,15 +64,13 @@ void FVFileView::Draw(const char *title)
 						usr.copy(newPath);
 						usr.c_str();
 						userFile[0] = 0;
-						ReadDir(newPath.c_str());
+						ReadDir(newPath.c_str(), filter);
 						ImGui::SetScrollHereY(0.0f);
-						//printf("entered folder %s\n", newPath.c_str());
 						break;
 					} else {
 						strovl sel(selectedFile, sizeof(selectedFile));
 						sel.copy(newPath);
 						sel.c_str();
-						//printf("selected file %s\n", selectedFile);
 						open = false;
 						break;
 					}
@@ -92,18 +102,32 @@ void FVFileList::Clear()
 	files.clear();
 }
 
+void FVFileList::InsertAlphabetically(FVFileInfo& info)
+{
+	for( std::vector<FVFileInfo>::iterator i=files.begin(); i!=files.end(); ++i) {
+		if(strcasecmp(info.name, i->name)<0) {
+			files.insert(i, info);
+			return;
+		}
+	}
+	files.push_back(info);
+}
 
 #ifdef __linux__
 
-void FVFileList::ReadDir(const char *full_path)
+void FVFileList::ReadDir(const char *full_path, const char*file_filter)
 {
 	struct dirent *entry = nullptr;
 	DIR *dp = nullptr;
 
 	char* prev_path = path;
-	path = strdup(full_path);
+	path = strdup(full_path ? full_path : "~/");
 	Clear();
 	if( prev_path) { free(prev_path);}
+
+	char* prev_filter = filter;
+	filter = file_filter ? strdup(file_filter) : nullptr;
+	if(!prev_filter) { free(prev_filter);}
 
 	FVFileInfo back;
 	back.name = strdup("..");
@@ -114,14 +138,31 @@ void FVFileList::ReadDir(const char *full_path)
 	dp = opendir(path);
 	if (dp != nullptr) {
 		while ((entry = readdir(dp))) {
-			if( strcmp(entry->d_name, ".")== 0 || strcmp(entry->d_name, "..")==0) { continue;}
 			if( entry->d_type == DT_DIR || entry->d_type == DT_REG) {
 				FVFileInfo info;
-				info.name = strdup(entry->d_name);
+				info.name = nullptr;
 				info.size = 0;
 				if( entry->d_type == DT_DIR) {
+					if( strcmp(entry->d_name, ".")== 0 || strcmp(entry->d_name, "..")==0) { continue;}
+					info.name = strdup(entry->d_name);
 					info.fileType = FVFileInfo::dir;
 				} else {
+					// check against filter
+					if(filter) {
+						strref name(entry->d_name);
+						strref filters(filter);
+						bool match = false;
+						while(strref filt = filters.split_token(',')) {
+							strref filtName = filt.split_token(':');
+							strref result = name.find_wildcard(filt,0,false);
+							if(result) {
+								match = true;
+								break;
+							}
+						}
+						if(!match) { continue; }
+					}
+					info.name = strdup(entry->d_name);
 					info.fileType = FVFileInfo::file;
 					struct stat statbuf;
 					strown<PATH_MAX_LEN> fullFile(path);
@@ -133,8 +174,7 @@ void FVFileList::ReadDir(const char *full_path)
 						info.size = statbuf.st_size;
 					}
 				}
-				files.push_back(info);
-//				printf ("%s (%s): %d\n", info.name, info.fileType==FVFileInfo::dir ? "dir" : "file", info.size);
+				InsertAlphabetically(info);
 			}
 		}
 	}
@@ -144,9 +184,3 @@ void FVFileList::ReadDir(const char *full_path)
 
 #elif _WIN32
 #endif
-
-void TestFileView(const char* path)
-{
-	FVFileList files;
-	files.ReadDir(path);
-}

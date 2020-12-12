@@ -48,6 +48,7 @@ struct FileTypeInfo {
 	bool* doneFlag;
 };
 
+#ifdef _WIN32
 static FileTypeInfo aImportInfo = { "Png\0*.png\0BMP\0*.bmp\0TGA\0*.tga\0", sImportImageFile, &sImportImageReady };
 static FileTypeInfo aLoadAnimInfo = { "Animation\0*.can\0", sLoadAnimFile, &sLoadAnimReady };
 static FileTypeInfo aSaveAsInfo = { "Animation\0*.can\0", sLoadAnimFile, &sSaveAsAnimReady };
@@ -55,6 +56,15 @@ static FileTypeInfo aSaveLevelAsInfo = { "Level\0*.txt\0", sSaveLevelFile, &sSav
 static FileTypeInfo aLoadLevelInfo = { "Level\0*.txt\0", sLoadLevelFile, &sLoadLevelReady };
 static FileTypeInfo aLoadGrabInfo = { "GrabMap\0*.png\0*.bmp\0*.tga\0", sLoadGrabFile, &sLoadGrabMapReady };
 static FileTypeInfo aLoadTemplateInfo = { "Template\0*.txt\0", sLoadTemplateFile, &sLoadTemplateImageReady };
+#else
+static FileTypeInfo aImportInfo = { "Png:*.png,BMP:*.bmp,TGA:*.tga", sImportImageFile, &sImportImageReady };
+static FileTypeInfo aLoadAnimInfo = { "Animation:*.can", sLoadAnimFile, &sLoadAnimReady };
+static FileTypeInfo aSaveAsInfo = { "Level:*.txt", sLoadAnimFile, &sSaveAsAnimReady };
+static FileTypeInfo aSaveLevelAsInfo = { "Level:*.txt", sSaveLevelFile, &sSaveAsLevelReady };
+static FileTypeInfo aLoadLevelInfo = { "Level:*.txt", sLoadLevelFile, &sLoadLevelReady };
+static FileTypeInfo aLoadGrabInfo = { "Png:*.png,BMP:*.bmp,TGA:*.tga", sLoadGrabFile, &sLoadGrabMapReady };
+static FileTypeInfo aLoadTemplateInfo = { "Template:*.txt", sLoadTemplateFile, &sLoadTemplateImageReady };
+#endif
 
 void InitStartFolder()
 {
@@ -266,7 +276,7 @@ void LoadLevelDialog()
 		0, NULL);
 #else
 	if( !filesView.IsOpen()) {
-		filesView.Show(GetStartFolder());
+		filesView.Show(GetStartFolder(), aLoadLevelInfo.fileTypes);
 	}
 #endif
 }
