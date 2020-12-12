@@ -5,7 +5,7 @@
 bool SaveFile(const char *filename, void* data, size_t size)
 {
 	FILE* f;
-#ifdef WIN32
+#ifdef _WIN32
 	if (fopen_s(&f, filename, "w") == 0 && f != nullptr) {
 #else
 	f = fopen(filename, "w");
@@ -21,7 +21,7 @@ bool SaveFile(const char *filename, void* data, size_t size)
 uint8_t* LoadBinary(const char* name, size_t& size)
 {
 	FILE* f;
-#ifdef WIN32
+#ifdef _WIN32
 	if (fopen_s(&f, name, "rb") == 0 && f != nullptr) {
 #else
 	f = fopen(name, "rb");

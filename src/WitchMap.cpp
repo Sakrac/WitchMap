@@ -10,7 +10,7 @@
 // **Prefer using the code in the example_glfw_opengl2/ folder**
 // See imgui_impl_glfw.cpp for details.
 
-#ifdef WIN32
+#ifdef _WIN32
 #include "framework.h"
 #endif
 // C RunTime Header Files
@@ -47,7 +47,7 @@ static void glfw_error_callback(int error, const char* description)
 #define MAX_LOADSTRING _MAX_PATH
 
 // Global Variables:
-#ifdef WIN32
+#ifdef _WIN32
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name

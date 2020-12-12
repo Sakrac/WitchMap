@@ -9,6 +9,13 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #elif _WIN32
+#include <windows.h>
+#include <stdio.h>
+#endif
+
+#ifdef _MSC_VER 
+#define strncasecmp _strnicmp
+#define strcasecmp _stricmp
 #endif
 
 void FVFileView::Show(const char *folder, const char *filter)
@@ -49,7 +56,7 @@ void FVFileView::Draw(const char *title)
 			if( files[i].fileType == FVFileInfo::dir) {
 				fileTxt.copy("(dir)");
 			} else {
-				fileTxt.append_num(files[i].size, 0, 10);
+				fileTxt.append_num((uint32_t)files[i].size, 0, 10);
 			}
 			fileTxt.pad_to(' ', 12);
 			fileTxt.append(files[i].name);
@@ -183,4 +190,68 @@ void FVFileList::ReadDir(const char *full_path, const char*file_filter)
 }
 
 #elif _WIN32
+
+void FVFileList::ReadDir(const char* full_path, const char* file_filter)
+{
+	WIN32_FIND_DATA ffd;
+	LARGE_INTEGER filesize;
+	strown<MAX_PATH> szDir(full_path);
+	HANDLE hFind = INVALID_HANDLE_VALUE;
+	DWORD dwError = 0;
+
+	szDir.append("\\*");
+
+	char* prev_path = path;
+	path = _strdup(full_path ? full_path : "~/");
+	Clear();
+	if (prev_path) { free(prev_path); }
+
+	char* prev_filter = filter;
+	filter = file_filter ? _strdup(file_filter) : nullptr;
+	if (!prev_filter) { free(prev_filter); }
+
+	FVFileInfo back;
+	back.name = _strdup("..");
+	back.fileType = FVFileInfo::dir;
+	back.size = 0;
+	files.push_back(back);
+
+	hFind = FindFirstFile(szDir.c_str(), &ffd);
+	if (hFind == INVALID_HANDLE_VALUE) {
+	}
+	do {
+		FVFileInfo info;
+		info.name = nullptr;
+		info.size = 0;
+
+		if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+			if (strcmp(ffd.cFileName, ".") == 0 || strcmp(ffd.cFileName, "..") == 0) { continue; }
+			info.name = _strdup(ffd.cFileName);
+			info.fileType = FVFileInfo::dir;
+		} else {
+			filesize.LowPart = ffd.nFileSizeLow;
+			filesize.HighPart = ffd.nFileSizeHigh;
+			// check against filter
+			if (filter) {
+				strref name(ffd.cFileName);
+				strref filters(filter);
+				bool match = false;
+				while (strref filt = filters.split_token(',')) {
+					strref filtName = filt.split_token(':');
+					strref result = name.find_wildcard(filt, 0, false);
+					if (result) {
+						match = true;
+						break;
+					}
+				}
+				if (!match) { continue; }
+			}
+			info.name = _strdup(ffd.cFileName);
+			info.fileType = FVFileInfo::file;
+		}
+		InsertAlphabetically(info);
+	} while (FindNextFile(hFind, &ffd) != 0);
+	FindClose(hFind);
+}
+
 #endif
