@@ -6,6 +6,16 @@
 #include <stdio.h>
 #include "Config.h"
 #include "FileDialog.h"
+#ifdef __linux__
+#include <unistd.h>
+#include <linux/limits.h>
+#define PATH_MAX_LEN PATH_MAX
+#define sprintf_s sprintf
+#define GetCurrentDirectory(size, buf) getcwd(buf, size)
+#define SetCurrentDirectory(str) chdir(str)
+#else
+#define PATH_MAX_LEN _MAX_PATH
+#endif
 
 /* L2D File Dialog for ImGui Instructions
 Usage
@@ -16,10 +26,11 @@ call FileDialog::ShowFileDialog, passing in a char array as a buffer to store
 the chosen file/folder path.
 */
 
-
+#ifdef _WIN32
 #define FILE_LOAD_THREAD_STACK 8192
-
 HANDLE hThreadFileDialog = 0;
+#endif
+
 static bool sFileDialogOpen = false;
 static bool sImportImageReady = false;
 static bool sLoadAnimReady = false;
@@ -29,15 +40,15 @@ static bool sLoadLevelReady = false;
 static bool sLoadGrabMapReady = false;
 static bool sLoadTemplateImageReady = false;
 
-static char sImportImageFile[MAX_PATH] = {};
-static char sLoadGrabFile[MAX_PATH] = {};
-static char sLoadAnimFile[MAX_PATH] = {};
-static char sSaveLevelFile[MAX_PATH] = {};
-static char sLoadLevelFile[MAX_PATH] = {};
-static char sLoadTemplateFile[MAX_PATH] = {};
+static char sImportImageFile[PATH_MAX_LEN] = {};
+static char sLoadGrabFile[PATH_MAX_LEN] = {};
+static char sLoadAnimFile[PATH_MAX_LEN] = {};
+static char sSaveLevelFile[PATH_MAX_LEN] = {};
+static char sLoadLevelFile[PATH_MAX_LEN] = {};
+static char sLoadTemplateFile[PATH_MAX_LEN] = {};
 
 
-static char sCurrentDir[ MAX_PATH ] = {};
+static char sCurrentDir[ PATH_MAX_LEN ] = {};
 
 struct FileTypeInfo {
 	const char* fileTypes;
@@ -133,7 +144,7 @@ const char* LoadLevelReady()
 	return nullptr;
 }
 
-
+#ifdef _WIN32
 void *FileLoadDialogThreadRun( void *param )
 {
 	FileTypeInfo* info = (FileTypeInfo*)param;
@@ -141,7 +152,7 @@ void *FileLoadDialogThreadRun( void *param )
 	ofn.lStructSize = sizeof( OPENFILENAME );
 //	ofn.hInstance = GetPrgInstance();
 	ofn.lpstrFile = info->fileName;
-	ofn.nMaxFile = MAX_PATH;
+	ofn.nMaxFile = PATH_MAX_LEN;
 	ofn.lpstrFilter = info->fileTypes;// "All\0*.*\0Prg\0*.prg\0Bin\0*.bin\0";
 	ofn.nFilterIndex = 1;
 	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
@@ -164,7 +175,7 @@ void *FileSaveDialogThreadRun(void *param)
 	ofn.lStructSize = sizeof(OPENFILENAME);
 	//	ofn.hInstance = GetPrgInstance();
 	ofn.lpstrFile = info->fileName;
-	ofn.nMaxFile = MAX_PATH;
+	ofn.nMaxFile = PATH_MAX_LEN;
 	ofn.lpstrFilter = info->fileTypes;// "All\0*.*\0Prg\0*.prg\0Bin\0*.bin\0";
 	ofn.nFilterIndex = 1;
 	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
@@ -178,15 +189,17 @@ void *FileSaveDialogThreadRun(void *param)
 	*info->doneFlag = true;
 	return nullptr;
 }
-
+#endif
 
 void LoadImageDialog()
 {
 	sImportImageReady = false;
 	sFileDialogOpen = true;
 
+#ifdef _WIN32
 	hThreadFileDialog = CreateThread(NULL, FILE_LOAD_THREAD_STACK, (LPTHREAD_START_ROUTINE)FileLoadDialogThreadRun, &aImportInfo,
 									 0, NULL);
+#endif
 }
 
 void LoadTemplateDialog()
@@ -194,8 +207,10 @@ void LoadTemplateDialog()
 	sLoadTemplateImageReady = false;
 	sFileDialogOpen = true;
 
+#ifdef _WIN32
 	hThreadFileDialog = CreateThread(NULL, FILE_LOAD_THREAD_STACK, (LPTHREAD_START_ROUTINE)FileLoadDialogThreadRun, &aLoadTemplateInfo,
 		0, NULL);
+#endif
 }
 
 void LoadGrabMapDialog()
@@ -203,8 +218,10 @@ void LoadGrabMapDialog()
 	sLoadGrabMapReady = false;
 	sFileDialogOpen = true;
 
+#ifdef _WIN32
 	hThreadFileDialog = CreateThread(NULL, FILE_LOAD_THREAD_STACK, (LPTHREAD_START_ROUTINE)FileLoadDialogThreadRun, &aLoadGrabInfo,
 		0, NULL);
+#endif
 }
 
 void LoadAnimDialog()
@@ -212,8 +229,10 @@ void LoadAnimDialog()
 	sLoadAnimReady = false;
 	sFileDialogOpen = true;
 
+#ifdef _WIN32
 	hThreadFileDialog = CreateThread(NULL, FILE_LOAD_THREAD_STACK, (LPTHREAD_START_ROUTINE)FileLoadDialogThreadRun, &aLoadAnimInfo,
 									 0, NULL);
+#endif
 }
 
 void SaveAnimDialog()
@@ -221,8 +240,10 @@ void SaveAnimDialog()
 	sLoadAnimReady = false;
 	sFileDialogOpen = true;
 
+#ifdef _WIN32
 	hThreadFileDialog = CreateThread(NULL, FILE_LOAD_THREAD_STACK, (LPTHREAD_START_ROUTINE)FileSaveDialogThreadRun, &aSaveAsInfo,
 									 0, NULL);
+#endif
 }
 
 void SaveLevelDialog()
@@ -230,8 +251,10 @@ void SaveLevelDialog()
 	sLoadAnimReady = false;
 	sFileDialogOpen = true;
 
+#ifdef _WIN32
 	hThreadFileDialog = CreateThread(NULL, FILE_LOAD_THREAD_STACK, (LPTHREAD_START_ROUTINE)FileSaveDialogThreadRun, &aSaveLevelAsInfo,
 									 0, NULL);
+#endif
 }
 
 void LoadLevelDialog()
@@ -239,6 +262,8 @@ void LoadLevelDialog()
 	sLoadAnimReady = false;
 	sFileDialogOpen = true;
 
+#ifdef _WIN32
 	hThreadFileDialog = CreateThread(NULL, FILE_LOAD_THREAD_STACK, (LPTHREAD_START_ROUTINE)FileLoadDialogThreadRun, &aLoadLevelInfo,
 		0, NULL);
+#endif
 }
