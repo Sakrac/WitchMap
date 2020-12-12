@@ -2,8 +2,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <commdlg.h>
-#else
-//#include "LimeOats/L2DFileDialog.h"
 #endif
 #include <stdio.h>
 #include "Config.h"
@@ -19,14 +17,6 @@
 #else
 #define PATH_MAX_LEN _MAX_PATH
 #endif
-/* L2D File Dialog for ImGui Instructions
-Usage
-Add L2DFileDialog.h to your C++ project and include it where you use ImGui.
-Then, set FileDialog::fileDialogOpen to true to set the open state.
-Finally, in your update method, check if FileDialog::fileDialogOpen == true and if so,
-call FileDialog::ShowFileDialog, passing in a char array as a buffer to store
-the chosen file/folder path.
-*/
 
 #ifdef _WIN32
 #define FILE_LOAD_THREAD_STACK 8192

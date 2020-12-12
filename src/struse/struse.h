@@ -62,6 +62,13 @@ typedef unsigned int strl_t;
 //	example: printf("string is " STROP_FMT "\n", STROP_ARG(strref))
 #define STRREF_FMT "%.*s"
 #define STRREF_ARG(s) (int)(s).get_len(), (s).get()
+#ifdef _WIN32
+#define DIR_SEP '\\'
+#define NOT_DIR_SEP '/'
+#else
+#define NOT_DIR_SEP '\\'
+#define DIR_SEP '/'
+#endif
 
 // internal helper functions for strref
 int _find_rh(const char *text, strl_t len, const char *comp, strl_t comp_len);
@@ -5026,14 +5033,6 @@ strl_t _strmod_utf8_toupper(char *string, strl_t length, strl_t cap) {
 	}
 	return (strl_t)(end-string);
 }
-
-#ifdef _WIN32
-#define DIR_SEP '\\'
-#define NOT_DIR_SEP '/'
-#else
-#define NOT_DIR_SEP '\\'
-#define DIR_SEP '/'
-#endif
 
 strl_t _strmod_cleanup_path(char *file, strl_t len)
 {
