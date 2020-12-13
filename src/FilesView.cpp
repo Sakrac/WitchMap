@@ -18,12 +18,15 @@
 #define strcasecmp _stricmp
 #endif
 
-void FVFileView::Show(const char *folder, const char *filter)
+void FVFileView::Show(const char *folder, bool *setWhenDone, char *pathWhenDone, int pathWhenDoneSize, const char *filter)
 {
 	strovl usr(userPath, sizeof(userPath));
 	usr.copy(folder);
 	usr.c_str();
 	ReadDir(folder, filter); 
+	selected = setWhenDone;
+	pathTarget = pathWhenDone;
+	pathTargetSize = pathWhenDoneSize;
 	open = true; 
 	selectedFile[0] = 0;
 }
@@ -33,7 +36,8 @@ void FVFileView::Draw(const char *title)
 	ImGui::SetNextWindowSize(ImVec2(740.0f, 410.0f), ImGuiCond_FirstUseEver);
 	if (open && ImGui::Begin(title, &open, ImGuiWindowFlags_NoDocking)) {
 		if(ImGui::InputText("Path", userPath, sizeof(userPath), ImGuiInputTextFlags_EnterReturnsTrue)) {
-			printf("%s\n",userPath);
+			printf("user setting path: %s\n", userPath);
+			ReadDir(userPath, filter);
 		}
 		if(ImGui::InputText("File", userFile, sizeof(userFile), ImGuiInputTextFlags_EnterReturnsTrue)) {
 			printf("%s\n",userFile);
@@ -66,6 +70,7 @@ void FVFileView::Draw(const char *title)
 					strown<PATH_MAX_LEN> newPath(path);
 					newPath.append(DIR_SEP).append(files[i].name);
 					newPath.cleanup_path();
+
 					if( files[i].fileType == FVFileInfo::dir) {
 						strovl usr(userPath, sizeof(userPath));
 						usr.copy(newPath);
@@ -78,6 +83,12 @@ void FVFileView::Draw(const char *title)
 						strovl sel(selectedFile, sizeof(selectedFile));
 						sel.copy(newPath);
 						sel.c_str();
+						if (pathTarget && pathTargetSize) {
+							strovl target(pathTarget, pathTargetSize);
+							target.copy(newPath);
+							target.c_str();
+						}
+						if (selected) { *selected = true; }
 						open = false;
 						break;
 					}
@@ -120,15 +131,28 @@ void FVFileList::InsertAlphabetically(FVFileInfo& info)
 	files.push_back(info);
 }
 
+static bool CheckFileFilter(strref name, strref filters)
+{
+	while(strref filt = filters.split_token(',')) {
+		int c = filt.find(':');
+		if( c>=0 ) { filt.skip(c+1); filt.skip_whitespace(); }
+		if(name.find_wildcard(filt,0,false)) { return true; }
+	}
+	return false;
+}
+
 #ifdef __linux__
 
 void FVFileList::ReadDir(const char *full_path, const char*file_filter)
 {
 	struct dirent *entry = nullptr;
-	DIR *dp = nullptr;
+
+	// if path can't be reached don't update it... 
+	DIR *dp = full_path ? opendir(full_path) : nullptr;
+	if( !dp) { return; }
 
 	char* prev_path = path;
-	path = strdup(full_path ? full_path : "~/");
+	path = strdup(full_path);
 	Clear();
 	if( prev_path) { free(prev_path);}
 
@@ -136,13 +160,15 @@ void FVFileList::ReadDir(const char *full_path, const char*file_filter)
 	filter = file_filter ? strdup(file_filter) : nullptr;
 	if(!prev_filter) { free(prev_filter);}
 
-	FVFileInfo back;
-	back.name = strdup("..");
-	back.fileType = FVFileInfo::dir;
-	back.size = 0;
-	files.push_back(back);
+	// add a parent folder option if the current folder is not root or home
+	if( !strref("/").same_str(full_path) && !strref("~/").same_str(full_path)) {
+		FVFileInfo back;
+		back.name = strdup("..");
+		back.fileType = FVFileInfo::dir;
+		back.size = 0;
+		files.push_back(back);
+	}
 
-	dp = opendir(path);
 	if (dp != nullptr) {
 		while ((entry = readdir(dp))) {
 			if( entry->d_type == DT_DIR || entry->d_type == DT_REG) {
@@ -155,19 +181,8 @@ void FVFileList::ReadDir(const char *full_path, const char*file_filter)
 					info.fileType = FVFileInfo::dir;
 				} else {
 					// check against filter
-					if(filter) {
-						strref name(entry->d_name);
-						strref filters(filter);
-						bool match = false;
-						while(strref filt = filters.split_token(',')) {
-							strref filtName = filt.split_token(':');
-							strref result = name.find_wildcard(filt,0,false);
-							if(result) {
-								match = true;
-								break;
-							}
-						}
-						if(!match) { continue; }
+					if(filter && !CheckFileFilter(strref(entry->d_name), strref(filter))) {
+						continue;
 					}
 					info.name = strdup(entry->d_name);
 					info.fileType = FVFileInfo::file;
@@ -185,7 +200,6 @@ void FVFileList::ReadDir(const char *full_path, const char*file_filter)
 			}
 		}
 	}
-
 	closedir(dp);
 }
 
@@ -232,19 +246,8 @@ void FVFileList::ReadDir(const char* full_path, const char* file_filter)
 			filesize.LowPart = ffd.nFileSizeLow;
 			filesize.HighPart = ffd.nFileSizeHigh;
 			// check against filter
-			if (filter) {
-				strref name(ffd.cFileName);
-				strref filters(filter);
-				bool match = false;
-				while (strref filt = filters.split_token(',')) {
-					strref filtName = filt.split_token(':');
-					strref result = name.find_wildcard(filt, 0, false);
-					if (result) {
-						match = true;
-						break;
-					}
-				}
-				if (!match) { continue; }
+			if(filter && !CheckFileFilter(strref(ffd.cFileName), strref(filter))) {
+				continue;
 			}
 			info.name = _strdup(ffd.cFileName);
 			info.fileType = FVFileInfo::file;

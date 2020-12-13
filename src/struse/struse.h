@@ -5038,6 +5038,10 @@ strl_t _strmod_cleanup_path(char *file, strl_t len)
 {
 	strl_t pos = 0;
 	char *trg = file;
+	while(len>4 && file[len-3]==DIR_SEP && file[len-2]=='.' && file[len-1]=='.') {
+		 len -= 4;
+		 while(len>1 && file[len]!=DIR_SEP) {--len;}
+	 }
 	while (len) {
 		len--;
 		char c = *file++;

@@ -7,6 +7,7 @@
 #include "Config.h"
 #include "FileDialog.h"
 #include "FilesView.h"
+#include "struse/struse.h"
 #ifdef __linux__
 #include <unistd.h>
 #include <linux/limits.h>
@@ -21,6 +22,10 @@
 #ifdef _WIN32
 #define FILE_LOAD_THREAD_STACK 8192
 HANDLE hThreadFileDialog = 0;
+#endif
+
+#ifdef __linux__
+#define CUSTOM_FILEVIEWER
 #endif
 
 static bool sFileDialogOpen = false;
@@ -39,6 +44,8 @@ static char sSaveLevelFile[PATH_MAX_LEN] = {};
 static char sLoadLevelFile[PATH_MAX_LEN] = {};
 static char sLoadTemplateFile[PATH_MAX_LEN] = {};
 
+static char sFileDialogFolder[PATH_MAX_LEN];
+
 static FVFileView filesView;
 static char sCurrentDir[ PATH_MAX_LEN ] = {};
 
@@ -48,7 +55,7 @@ struct FileTypeInfo {
 	bool* doneFlag;
 };
 
-#ifdef _WIN32
+#ifndef CUSTOM_FILEVIEWER
 static FileTypeInfo aImportInfo = { "Png\0*.png\0BMP\0*.bmp\0TGA\0*.tga\0", sImportImageFile, &sImportImageReady };
 static FileTypeInfo aLoadAnimInfo = { "Animation\0*.can\0", sLoadAnimFile, &sLoadAnimReady };
 static FileTypeInfo aSaveAsInfo = { "Animation\0*.can\0", sLoadAnimFile, &sSaveAsAnimReady };
@@ -57,21 +64,23 @@ static FileTypeInfo aLoadLevelInfo = { "Level\0*.txt\0", sLoadLevelFile, &sLoadL
 static FileTypeInfo aLoadGrabInfo = { "GrabMap\0*.png\0*.bmp\0*.tga\0", sLoadGrabFile, &sLoadGrabMapReady };
 static FileTypeInfo aLoadTemplateInfo = { "Template\0*.txt\0", sLoadTemplateFile, &sLoadTemplateImageReady };
 #else
-static FileTypeInfo aImportInfo = { "Png:*.png,BMP:*.bmp,TGA:*.tga", sImportImageFile, &sImportImageReady };
-static FileTypeInfo aLoadAnimInfo = { "Animation:*.can", sLoadAnimFile, &sLoadAnimReady };
-static FileTypeInfo aSaveAsInfo = { "Level:*.txt", sLoadAnimFile, &sSaveAsAnimReady };
-static FileTypeInfo aSaveLevelAsInfo = { "Level:*.txt", sSaveLevelFile, &sSaveAsLevelReady };
-static FileTypeInfo aLoadLevelInfo = { "Level:*.txt", sLoadLevelFile, &sLoadLevelReady };
-static FileTypeInfo aLoadGrabInfo = { "Png:*.png,BMP:*.bmp,TGA:*.tga", sLoadGrabFile, &sLoadGrabMapReady };
-static FileTypeInfo aLoadTemplateInfo = { "Template:*.txt", sLoadTemplateFile, &sLoadTemplateImageReady };
+const char aImportInfo[] = "Png:*.png,BMP:*.bmp,TGA:*.tga";
+const char aLoadAnimInfo[] = "Animation:*.can";
+const char aSaveAsInfo[] = "Level:*.txt";
+const char aSaveLevelAsInfo[] = "Level:*.txt";
+const char aLoadLevelInfo[] = "Level:*.txt";
+const char aLoadGrabInfo[] = "Png:*.png,BMP:*.bmp,TGA:*.tga";
+const char aLoadTemplateInfo[] = "Template:*.txt";
 #endif
 
 void InitStartFolder()
 {
 	if( GetCurrentDirectory( sizeof( sCurrentDir ), sCurrentDir ) != 0 ) {
+		memcpy(sFileDialogFolder, sCurrentDir, sizeof(sFileDialogFolder) < sizeof(sCurrentDir) ? sizeof(sFileDialogFolder) : sizeof(sCurrentDir) );
 		return;
 	}
 	sCurrentDir[ 0 ] = 0;
+	strcpy(sFileDialogFolder, "/");
 }
 
 const char* GetStartFolder() { return sCurrentDir; }
@@ -89,6 +98,9 @@ const char* ImportImageReady()
 {
 	if (sImportImageReady) {
 		sImportImageReady = false;
+		strovl savePath(sFileDialogFolder, sizeof(sFileDialogFolder));
+		savePath.copy(strref(sImportImageFile).before_last(DIR_SEP));
+		savePath.c_str();
 		return sImportImageFile;
 	}
 	return nullptr;
@@ -96,13 +108,18 @@ const char* ImportImageReady()
 
 void DrawFileDialog()
 {
+#ifdef CUSTOM_FILEVIEWER
 	filesView.Draw("Select File");
+#endif
 }
 
 const char* LoadGrabMapReady()
 {
 	if (sLoadGrabMapReady) {
 		sLoadGrabMapReady = false;
+		strovl savePath(sFileDialogFolder, sizeof(sFileDialogFolder));
+		savePath.copy(strref(sLoadGrabFile).before_last(DIR_SEP));
+		savePath.c_str();
 		return sLoadGrabFile;
 	}
 	return nullptr;
@@ -112,6 +129,9 @@ const char* LoadTemplateImageReady()
 {
 	if (sLoadTemplateImageReady) {
 		sLoadTemplateImageReady = false;
+		strovl savePath(sFileDialogFolder, sizeof(sFileDialogFolder));
+		savePath.copy(strref(sLoadTemplateFile).before_last(DIR_SEP));
+		savePath.c_str();
 		return sLoadTemplateFile;
 	}
 	return nullptr;
@@ -121,6 +141,9 @@ const char* LoadAnimReady()
 {
 	if (sLoadAnimReady) {
 		sLoadAnimReady = false;
+		strovl savePath(sFileDialogFolder, sizeof(sFileDialogFolder));
+		savePath.copy(strref(sLoadAnimFile).before_last(DIR_SEP));
+		savePath.c_str();
 		return sLoadAnimFile;
 	}
 	return nullptr;
@@ -130,6 +153,9 @@ const char* SaveAsAnimReady()
 {
 	if (sSaveAsAnimReady) {
 		sSaveAsAnimReady = false;
+		strovl savePath(sFileDialogFolder, sizeof(sFileDialogFolder));
+		savePath.copy(strref(sLoadAnimFile).before_last(DIR_SEP));
+		savePath.c_str();
 		return sLoadAnimFile;
 	}
 	return nullptr;
@@ -139,6 +165,9 @@ const char* SaveLevelAsReady()
 {
 	if (sSaveAsLevelReady) {
 		sSaveAsLevelReady = false;
+		strovl savePath(sFileDialogFolder, sizeof(sFileDialogFolder));
+		savePath.copy(strref(sSaveLevelFile).before_last(DIR_SEP));
+		savePath.c_str();
 		return sSaveLevelFile;
 	}
 	return nullptr;
@@ -148,6 +177,9 @@ const char* LoadLevelReady()
 {
 	if (sLoadLevelReady) {
 		sLoadLevelReady = false;
+		strovl savePath(sFileDialogFolder, sizeof(sFileDialogFolder));
+		savePath.copy(strref(sLoadLevelFile).before_last(DIR_SEP));
+		savePath.c_str();
 		return sLoadLevelFile;
 	}
 	return nullptr;
@@ -208,6 +240,10 @@ void LoadImageDialog()
 #ifdef _WIN32
 	hThreadFileDialog = CreateThread(NULL, FILE_LOAD_THREAD_STACK, (LPTHREAD_START_ROUTINE)FileLoadDialogThreadRun, &aImportInfo,
 									 0, NULL);
+#else
+	if( !filesView.IsOpen()) {
+		filesView.Show(sFileDialogFolder, &sImportImageReady, sImportImageFile, sizeof(sImportImageFile), aImportInfo);
+	}
 #endif
 }
 
@@ -219,6 +255,10 @@ void LoadTemplateDialog()
 #ifdef _WIN32
 	hThreadFileDialog = CreateThread(NULL, FILE_LOAD_THREAD_STACK, (LPTHREAD_START_ROUTINE)FileLoadDialogThreadRun, &aLoadTemplateInfo,
 		0, NULL);
+#else
+	if( !filesView.IsOpen()) {
+		filesView.Show(sFileDialogFolder, &sLoadTemplateImageReady, sLoadTemplateFile, sizeof(sLoadTemplateFile));
+	}
 #endif
 }
 
@@ -230,6 +270,10 @@ void LoadGrabMapDialog()
 #ifdef _WIN32
 	hThreadFileDialog = CreateThread(NULL, FILE_LOAD_THREAD_STACK, (LPTHREAD_START_ROUTINE)FileLoadDialogThreadRun, &aLoadGrabInfo,
 		0, NULL);
+#else
+	if( !filesView.IsOpen()) {
+		filesView.Show(sFileDialogFolder, &sLoadGrabMapReady, sLoadGrabFile, sizeof(sLoadGrabFile), aLoadGrabInfo);
+	}
 #endif
 }
 
@@ -255,20 +299,25 @@ void SaveAnimDialog()
 #endif
 }
 
+
 void SaveLevelDialog()
 {
-	sLoadAnimReady = false;
+	sSaveAsLevelReady = false;
 	sFileDialogOpen = true;
 
 #ifdef _WIN32
 	hThreadFileDialog = CreateThread(NULL, FILE_LOAD_THREAD_STACK, (LPTHREAD_START_ROUTINE)FileSaveDialogThreadRun, &aSaveLevelAsInfo,
 									 0, NULL);
+#else
+	if( !filesView.IsOpen()) {
+		filesView.Show(sFileDialogFolder, &sSaveAsLevelReady, sSaveLevelFile, sizeof(sSaveLevelFile), aSaveLevelAsInfo);
+	}
 #endif
 }
 
 void LoadLevelDialog()
 {
-	sLoadAnimReady = false;
+	sLoadLevelReady = false;
 	sFileDialogOpen = true;
 
 #ifdef _WIN32
@@ -276,7 +325,8 @@ void LoadLevelDialog()
 		0, NULL);
 #else
 	if( !filesView.IsOpen()) {
-		filesView.Show(GetStartFolder(), aLoadLevelInfo.fileTypes);
+		filesView.Show(sFileDialogFolder, &sLoadLevelReady, sLoadLevelFile, sizeof(sLoadLevelFile), aLoadLevelInfo);
 	}
 #endif
 }
+
