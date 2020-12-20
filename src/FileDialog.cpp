@@ -80,7 +80,11 @@ void InitStartFolder()
 		return;
 	}
 	sCurrentDir[ 0 ] = 0;
+#ifdef _MSC_VER
+	strcpy_s(sFileDialogFolder, "/");
+#else
 	strcpy(sFileDialogFolder, "/");
+#endif
 }
 
 const char* GetStartFolder() { return sCurrentDir; }
