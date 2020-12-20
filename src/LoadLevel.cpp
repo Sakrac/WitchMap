@@ -7,6 +7,14 @@
 #include "Files.h"
 #include "Config.h"
 
+#ifdef __linux__
+#include <linux/limits.h>
+#define PATH_MAX_LEN PATH_MAX
+#define sprintf_s sprintf
+#else
+#define PATH_MAX_LEN _MAX_PATH
+#endif
+
 bool AddTemplateFrames(strref data, TemplateSet* tmp)
 {
 	ConfigParse info(data);
@@ -89,10 +97,9 @@ bool AddTemplateArray(strref value, TemplateImage* tmp)
 
 bool Level::LoadTemplateImage(TemplateImage* map)
 {
-	bool error = false;
 	size_t size;
 	uint8_t* data;
-	strown<_MAX_PATH> fullPath;
+	strown<PATH_MAX_LEN> fullPath;
 	if (map->templateFile[1] == ':' || map->templateFile[0] == '/' || map->templateFile[0] == '\\') {
 		fullPath.copy(map->templateFile);
 	} else {
@@ -115,7 +122,7 @@ bool Level::LoadTemplateImage(TemplateImage* map)
 				map->filename.copy(value);
 				uint8_t* image;
 				{
-					strown<_MAX_PATH> imagePath;
+					strown<PATH_MAX_LEN> imagePath;
 					if (map->filename[1] == ':' || map->filename[0] == '/' || map->filename[0] == '\\') {
 						imagePath.copy(map->filename);
 					} else {
@@ -144,7 +151,7 @@ bool Level::LoadTemplateImage(TemplateImage* map)
 bool Level::LoadTileSetTo(TileSet* tileSet)
 {
 	if (tileSet->filename) {
-		strown<_MAX_PATH> fullPath;
+		strown<PATH_MAX_LEN> fullPath;
 		if (tileSet->filename[1] == ':' || tileSet->filename[0]=='/' || tileSet->filename[0]=='\\') {
 			fullPath.copy(tileSet->filename);
 		} else {
@@ -249,7 +256,7 @@ bool Level::LoadOverlay(strref overlayData)
 
 void Level::LoadLevel(const char* file)
 {
-	bool error = false;
+	//bool error = false;
 	size_t size;
 	uint8_t* data = LoadBinary(file, size);
 	if (data == nullptr) { return; }
@@ -263,12 +270,12 @@ void Level::LoadLevel(const char* file)
 			if (name.same_str("Width")) {
 				int wid = (int)value.atoi();
 				if (wid) { mapWidth = wid; }
-				else { error = true; }
+				//else { error = true; }
 			}
 			else if (name.same_str("Height")) {
 				int hgt = (int)value.atoi();
 				if (hgt) { mapHeight = hgt; }
-				else { error = true; }
+				//else { error = true; }
 			}
 		}
 		else if (type == ConfigParseType::CPT_Array) {
@@ -294,7 +301,7 @@ void Level::LoadLevel(const char* file)
 				ConfigParse layers(value);
 				while (!layers.Empty()) {
 					strref name2, value2;
-					ConfigParseType type2 = layers.Next(&name2, &value2);
+					layers.Next(&name2, &value2);
 					if (name2.same_str("Background")) {
 						LoadLayer(value2, background);
 					}
@@ -303,7 +310,7 @@ void Level::LoadLevel(const char* file)
 					}
 				}
 			} else if (name.same_str("Templates")) {
-				if (!LoadOverlay(value)) { error = true; }
+				if (!LoadOverlay(value)) { /*error = true;*/ }
 			}
 		}
 	}

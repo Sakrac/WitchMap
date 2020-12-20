@@ -44,6 +44,7 @@
     </ClInclude>
     <ClInclude Include="LevelData.h" />
     <ClInclude Include="Files.h" />
+    <ClInclude Include="FilesView.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\examples\imgui_impl_opengl2.cpp">
@@ -73,6 +74,7 @@
     <ClCompile Include="LoadLevel.cpp" />
     <ClCompile Include="WitchMap.cpp" />
     <ClCompile Include="TileSet.cpp" />
+    <ClCompile Include="FilesView.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="imgui\misc\natvis\imgui.natvis">

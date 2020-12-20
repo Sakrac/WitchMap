@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "imgui.h"
-#include "image.h"
+#include "Image.h"
 #include "FileDialog.h"
 #include "struse/struse.h"
 #include "Config.h"
@@ -114,7 +114,7 @@ void SaveLevel(Level *level)
 				if ((size_t)item->set < image->templateSets.size()) {
 					TemplateSet* set = image->templateSets[item->set];
 					if ((size_t)item->frame < set->frames.size()) {
-						TemplateFrame* frame = &set->frames[item->frame];
+						//TemplateFrame* frame = &set->frames[item->frame];
 						conf.BeginStruct(set->name);
 						conf.AddValue("image", item->image);
 						conf.AddValue("set", item->set);
@@ -176,24 +176,25 @@ void MainMenu()
 
 void UpdateScaling(float &scale, float &zoom, float* pos, const ImVec2 &mousePos, const ImVec2& tl, const ImVec2& br)
 {
-	float scalePrev = scale;
-	if (mousePos.x >= tl.x && mousePos.x < br.x && mousePos.y >= tl.y && mousePos.y < br.y) {
-		ImVec2 mouseMove = ImGui::GetMouseDragDelta(ImGuiMouseButton_Middle);
-		ImGui::ResetMouseDragDelta(ImGuiMouseButton_Middle);
-		pos[0] -= mouseMove.x / scale;
-		pos[1] -= mouseMove.y / scale;
+	if (ImGui::IsWindowHovered()) {
+		float scalePrev = scale;
+		if (mousePos.x >= tl.x && mousePos.x < br.x && mousePos.y >= tl.y && mousePos.y < br.y) {
+			ImVec2 mouseMove = ImGui::GetMouseDragDelta(ImGuiMouseButton_Middle);
+			ImGui::ResetMouseDragDelta(ImGuiMouseButton_Middle);
+			pos[0] -= mouseMove.x / scale;
+			pos[1] -= mouseMove.y / scale;
 
-		zoom += ImGui::GetIO().MouseWheel;
-		zoom = zoom < 0.0f ? 0.0f : (zoom >= ZOOM_SCROLL_STEPS ? (ZOOM_SCROLL_STEPS - 1.0f) : zoom);
+			zoom += ImGui::GetIO().MouseWheel;
+			zoom = zoom < 0.0f ? 0.0f : (zoom >= ZOOM_SCROLL_STEPS ? (ZOOM_SCROLL_STEPS - 1.0f) : zoom);
+		}
+		scale = powf(ZOOM_RANGE, float(zoom) / (float)(ZOOM_SCROLL_STEPS / 2) - 1.0f);
+		if (scalePrev != scale) {
+			ImVec2 mouseCurr = ImVec2((mousePos.x - tl.x) / scale, (mousePos.y - tl.y) / scale);
+			ImVec2 mousePrev = ImVec2((mousePos.x - tl.x) / scalePrev, (mousePos.y - tl.y) / scalePrev);
+			pos[0] -= mouseCurr.x - mousePrev.x;
+			pos[1] -= mouseCurr.y - mousePrev.y;
+		}
 	}
-	scale = powf(ZOOM_RANGE, float(zoom) / (float)(ZOOM_SCROLL_STEPS / 2) - 1.0f);
-	if (scalePrev != scale) {
-		ImVec2 mouseCurr = ImVec2((mousePos.x - tl.x) / scale, (mousePos.y - tl.y) / scale);
-		ImVec2 mousePrev = ImVec2((mousePos.x - tl.x) / scalePrev, (mousePos.y - tl.y) / scalePrev);
-		pos[0] -= mouseCurr.x - mousePrev.x;
-		pos[1] -= mouseCurr.y - mousePrev.y;
-	}
-
 }
 
 void ShowTemplateFrame(int x, int y, int imageNum, int setNum, int frameNum, Level *level, float mapScale, ImVec2 &spl)
@@ -240,6 +241,10 @@ TemplateFrame* GetTemplateFrameFromItem(TemplateItem& item, Level *level)
 	return nullptr;
 }
 
+#ifndef _MSC_VER
+#define sprintf_s sprintf
+#endif 
+
 void ShowLevelMap(Level *level)
 {
 	static float mapScale = 1.0f;
@@ -270,7 +275,7 @@ void ShowLevelMap(Level *level)
 
 	ImGui::NextColumn();
 
-	static int e = 0;
+	//static int e = 0;
 	ImGui::RadioButton("background", &level->currentLayer, 0);
 	ImGui::SameLine();
 	ImGui::Checkbox("show##bg", &level->showBackground);
@@ -304,7 +309,7 @@ void ShowLevelMap(Level *level)
 
 	// pixels left in window
 	ImVec2 winLeft(winSize.x + winPos.x, winSize.y + winPos.y);
-	float mapWindowArea[2] = { winLeft.x - spl.x, winLeft.y - spl.y };
+	//float mapWindowArea[2] = { winLeft.x - spl.x, winLeft.y - spl.y };
 
 	ImVec2 mousePos = ImGui::GetMousePos();
 

@@ -1,7 +1,10 @@
 #pragma once
 
-void GetStartFolder();
+void InitStartFolder();
+const char* GetStartFolder();
 void ResetStartFolder();
+
+void DrawFileDialog();
 
 bool IsFileDialogOpen();
 const char* ImportImageReady();

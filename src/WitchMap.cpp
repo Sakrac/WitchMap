@@ -1,4 +1,4 @@
-// WitchMap by Carl-Henrik Skårstedt, Space Moguls 2020
+// WitchMap by Carl-Henrik Skï¿½rstedt, Space Moguls 2020
 //  uses STB image loader by Sean Barrett and others, see stb/stb_image.h
 //  uses ImGui by Omar Cornut, see ImGui/imgui.h
 
@@ -10,7 +10,14 @@
 // **Prefer using the code in the example_glfw_opengl2/ folder**
 // See imgui_impl_glfw.cpp for details.
 
+#ifdef _WIN32
 #include "framework.h"
+#endif
+// C RunTime Header Files
+#include <stdlib.h>
+#include <malloc.h>
+#include <memory.h>
+
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl2.h"
@@ -19,6 +26,8 @@
 #define GL_SILENCE_DEPRECATION
 #endif
 #include <GLFW/glfw3.h>
+#include "FileDialog.h"
+#include "FilesView.h"
 
 void WitchEdInit();
 void WitchEdWindow();
@@ -38,6 +47,7 @@ static void glfw_error_callback(int error, const char* description)
 #define MAX_LOADSTRING _MAX_PATH
 
 // Global Variables:
+#ifdef _WIN32
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
@@ -46,6 +56,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                       _In_opt_ HINSTANCE hPrevInstance,
                       _In_ LPWSTR    lpCmdLine,
                       _In_ int       nCmdShow)
+#else
+int main(int argc, char* argv[])
+#endif
 {
     // Setup window
     glfwSetErrorCallback(glfw_error_callback);
@@ -56,6 +69,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         return 1;
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync
+
+    InitStartFolder();
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -101,8 +116,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	WitchEdInit();
 		
     // Our state
-    bool show_demo_window = true;
-    bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NavEnableKeyboard;
 
@@ -119,8 +132,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         ImGui_ImplOpenGL2_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-
-        static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 
         // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
         // because it would be confusing to have two docking targets within each others.
@@ -142,6 +153,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         ImGui::DockSpace(dockspace_id);
 
         WitchEdWindow();
+        DrawFileDialog();
 
         ImGui::End();
 
